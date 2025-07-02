@@ -575,10 +575,13 @@ What aspect of the digital realm calls for deeper exploration?`
           transform: scale(1.05);
         }
 
-        .avatar-placeholder {
-          font-size: 3rem;
-          color: #ffffff;
-          text-shadow: 0 0 20px #ff0080;
+        .avatar-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 50%;
+          position: relative;
+          z-index: 2;
         }
 
         .avatar-ring {
@@ -588,6 +591,7 @@ What aspect of the digital realm calls for deeper exploration?`
           border-radius: 50%;
           animation: rotate 4s linear infinite;
           box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+          z-index: 3;
         }
 
         .avatar-overlay {
@@ -604,6 +608,7 @@ What aspect of the digital realm calls for deeper exploration?`
           mix-blend-mode: overlay;
           animation: avatarPulse 4s ease-in-out infinite;
           pointer-events: none;
+          z-index: 1;
         }
 
         .neural-display {
@@ -1034,7 +1039,11 @@ What aspect of the digital realm calls for deeper exploration?`
                 <h1 className="title">⚡ PRIESTESS ⚡</h1>
                 
                 <div className="avatar-container">
-                  <div className="avatar-placeholder">🔮</div>
+                  <img 
+                    src="/A captivating character design of a half robot, half voodoo doll woman. She has intricate dreadlocks made of colorful cables, intertwined with metallic threads. Her head features glowing needles, each emitting vibran.png"
+                    alt="Priestess Avatar"
+                    className="avatar-image"
+                  />
                   <div className="avatar-overlay"></div>
                   <div className="avatar-ring"></div>
                 </div>
