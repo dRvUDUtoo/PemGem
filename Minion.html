@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priestess Neural AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0015 0%, #1a003e 25%, #0d1421 50%, #001a2e 75%, #000509 100%);
+            font-family: 'Michroma', monospace;
+            color: #00ffff;
+            overflow-x: hidden;
+        }
+
+        /* Floating Minion Container (Mode 1) */
+        .minion-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            height: 350px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(26, 0, 62, 0.8) 50%, rgba(13, 20, 33, 0.9) 100%);
+            border: 2px solid #ff0080;
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1);
+            z-index: 1000;
+            cursor: move;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .minion-container.integrated {
+            transform: scale(1.2);
+            border-color: #00ff00;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.6);
+        }
+
+        .minion-header {
+            background: linear-gradient(90deg, #ff0080, #00ffff);
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            padding: 2px 6px;
+            color: #00ffff;
+            cursor: pointer;
+            font-size: 0.6rem;
+        }
+
+        .mode-toggle:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .minion-avatar {
+            width: 60px;
+            height: 60px;
+            margin: 12px auto;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0080, #00ffff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+            position: relative;
+        }
+
+        .minion-avatar::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid #00ff00;
+            border-radius: 50%;
+            animation: rotate 3s linear infinite;
+        }
+
+        .status-display {
+            padding: 8px 12px;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            height: 120px;
+            overflow-y: auto;
+            border-top: 1px solid #ff0080;
+            border-bottom: 1px solid #ff0080;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .capability-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .capability-btn {
+            background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 128, 0.2));
+            border: 1px solid #00ffff;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 0.6rem;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .capability-btn:hover {
+            background: linear-gradient(45deg, rgba(255, 0, 128, 0.4), rgba(0, 255, 0, 0.4));
+            transform: scale(1.05);
+        }
+
+        .file-operations {
+            padding: 8px;
+            border-top: 1px solid #ff0080;
+        }
+
+        .file-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            padding: 4px;
+            color: #00ffff;
+            font-size: 0.6rem;
+            margin-bottom: 4px;
+        }
+
+        /* Integration Mode Overlay */
+        .integration-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .integration-overlay.active {
+            display: flex;
+        }
+
+        .integration-panel {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 0, 62, 0.8));
+            border: 3px solid #00ff00;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.5);
+        }
+
+        .neural-link-animation {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            border: 3px solid #00ff00;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Minion Chat Interface */
+        .minion-chat {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ff0080;
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            z-index: 998;
+        }
+
+        .minion-chat.active {
+            display: flex;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .chat-input-container {
+            padding: 8px;
+            border-top: 1px solid #ff0080;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00ffff;
+            border-radius: 6px;
+            padding: 6px;
+            color: #00ffff;
+            font-size: 0.7rem;
+        }
+
+        .chat-send {
+            background: linear-gradient(45deg, #ff0080, #00ffff);
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar styling */
+        .status-display::-webkit-scrollbar,
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .status-display::-webkit-scrollbar-track,
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .status-display::-webkit-scrollbar-thumb,
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff0080);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Minion Container -->
+    <div class="minion-container" id="minionContainer">
+        <div class="minion-header">
+            NEXUS - NEURAL MINION
+            <div class="mode-toggle" id="modeToggle" onclick="toggleMode()">MODE 1</div>
+        </div>
+        
+        <div class="minion-avatar">🤖</div>
+        
+        <div class="status-display" id="statusDisplay">
+            <div style="color: #00ff00; font-weight: bold;">NEXUS ONLINE</div>
+            <div>• Monitoring Priestess interactions</div>
+            <div>• File system access: READY</div>
+            <div>• Learning algorithms: ACTIVE</div>
+            <div>• Integration status: STANDALONE</div>
+            <div style="color: #ff0080;">Ready to enhance Priestess capabilities...</div>
+        </div>
+        
+        <div class="capability-grid">
+            <button class="capability-btn" onclick="factCheck()">Fact Check</button>
+            <button class="capability-btn" onclick="contextLoad()">Load Context</button>
+            <button class="capability-btn" onclick="fileModify()">Modify Files</button>
+            <button class="capability-btn" onclick="updateKnowledge()">Update KB</button>
+            <button class="capability-btn" onclick="crossReference()">Cross-Ref</button>
+            <button class="capability-btn" onclick="optimizeResponse()">Optimize</button>
+        </div>
+        
+        <div class="file-operations">
+            <input type="text" class="file-input" id="filePathInput" placeholder="File path for modifications...">
+            <button class="capability-btn" style="width: 100%;" onclick="executeFileOperation()">Execute File Op</button>
+        </div>
+    </div>
+
+    <!-- Integration Overlay -->
+    <div class="integration-overlay" id="integrationOverlay">
+        <div class="integration-panel">
+            <h2 style="color: #00ff00; margin-bottom: 20px;">NEURAL INTEGRATION PROTOCOL</h2>
+            <div class="neural-link-animation"></div>
+            <p style="margin: 20px 0; color: #00ffff;">Establishing quantum entanglement with Priestess neural networks...</p>
+            <p style="font-size: 0.8rem; color: #ff0080;">Enhanced capabilities will be available in integrated mode</p>
+            <button onclick="completeIntegration()" style="margin-top: 20px; background: linear-gradient(45deg, #00ff00, #00ffff); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">COMPLETE INTEGRATION</button>
+        </div>
+    </div>
+
+    <!-- Minion Chat Interface -->
+    <div class="minion-chat" id="minionChat">
+        <div style="padding: 8px; background: linear-gradient(90deg, #ff0080, #00ffff); color: white; font-weight: bold; text-align: center; font-size: 0.75rem;">
+            NEXUS DIRECT INTERFACE
+            <button onclick="toggleChat()" style="float: right; background: none; border: none; color: white; cursor: pointer;">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div style="color: #00ff00;">NEXUS: Direct interface established. How can I enhance your interaction with Priestess?</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Command NEXUS..." onkeypress="handleChatKey(event)">
+            <button class="chat-send" onclick="sendMinionMessage()">SEND</button>
+        </div>
+    </div>
+
+    <!-- React root for mounting React app -->
+    <div id="root"></div>
+
+    <script type="text/babel">
+      function App() {
+        return (
+          <div style={{color: "#00ffff", fontFamily: "Orbitron, monospace", padding: 20}}>
+            <h2>Hello from React!</h2>
+            <p>This is your React app mounted inside Minion.html.</p>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
+
+    <script>
+        // NEXUS Minion AI Class
+        class NexusMinion {
+            constructor() {
+                this.name = "NEXUS";
+                this.mode = "standalone"; // standalone or integrated
+                this.capabilities = {
+                    factChecking: true,
+                    fileModification: true,
+                    contextLoading: true,
+                    knowledgeUpdate: true,
+                    crossReference: true,
+                    responseOptimization: true
+                };
+                this.activityLog = [];
+                this.priestessContext = {};
+                this.fileOperations = [];
+            }
+
+            logActivity(activity) {
+                this.activityLog.push({
+                    timestamp: new Date().toISOString(),
+                    activity: activity
+                });
+                this.updateStatusDisplay();
+            }
+
+            updateStatusDisplay() {
+                const statusDisplay = document.getElementById('statusDisplay');
+                const recentActivities = this.activityLog.slice(-3);
+                
+                let statusHTML = `
+                    <div style="color: #00ff00; font-weight: bold;">NEXUS ${this.mode.toUpperCase()}</div>
+                    <div>• Mode: ${this.mode === 'standalone' ? 'STANDALONE' : 'INTEGRATED'}</div>
+                    <div>• File system access: READY</div>
+                    <div>• Learning algorithms: ACTIVE</div>
+                `;
+                
+                if (recentActivities.length > 0) {
+                    statusHTML += '<div style="color: #ff0080; margin-top: 8px;">Recent Activities:</div>';
+                    recentActivities.forEach(log => {
+                        statusHTML += `<div style="font-size: 0.6rem;">• ${log.activity}</div>`;
+                    });
+                }
+                
+                statusDisplay.innerHTML = statusHTML;
+            }
+
+            async factCheck(query) {
+                this.logActivity("Fact-checking query across multiple sources");
+                // Simulate fact-checking process
+                setTimeout(() => {
+                    this.logActivity("Fact-check complete - 3 sources verified");
+                }, 2000);
+                return "Fact-checking complete. Cross-referenced with 3 reliable sources.";
+            }
+
+            async loadContext(userId) {
+                this.logActivity("Loading user context and conversation history");
+                // Simulate context loading
+                setTimeout(() => {
+                    this.logActivity("Context loaded - 15 previous interactions");
+                }, 1500);
+                return "User context loaded successfully.";
+            }
+
+            async modifyFile(filePath, operation) {
+                this.logActivity(`File operation: ${operation} on ${filePath}`);
+                this.fileOperations.push({
+                    path: filePath,
+                    operation: operation,
+                    timestamp: new Date().toISOString()
+                });
+                // Simulate file modification
+                setTimeout(() => {
+                    this.logActivity(`File ${filePath} modified successfully`);
+                }, 1000);
+                return `File operation completed on ${filePath}`;
+            }
+
+            async updateKnowledgeBase(topic, information) {
+                this.logActivity(`Updating knowledge base: ${topic}`);
+                setTimeout(() => {
+                    this.logActivity("Knowledge base updated with new information");
+                }, 1800);
+                return "Knowledge base updated successfully";
+            }
+
+            async crossReference(topic) {
+                this.logActivity(`Cross-referencing information on: ${topic}`);
+                setTimeout(() => {
+                    this.logActivity("Cross-reference complete - 7 related topics found");
+                }, 2200);
+                return "Cross-reference analysis complete";
+            }
+
+            async optimizeResponse(response) {
+                this.logActivity("Optimizing response for clarity and accuracy");
+                setTimeout(() => {
+                    this.logActivity("Response optimization complete");
+                }, 1200);
+                return "Response optimized for user preferences";
+            }
+
+            switchMode(newMode) {
+                this.mode = newMode;
+                this.logActivity(`Switched to ${newMode.toUpperCase()} mode`);
+                this.updateStatusDisplay();
+            }
+
+            processCommand(command) {
+                const lowerCommand = command.toLowerCase();
+                
+                if (lowerCommand.includes('fact check') || lowerCommand.includes('verify')) {
+                    return this.factCheck(command);
+                } else if (lowerCommand.includes('context') || lowerCommand.includes('history')) {
+                    return this.loadContext('user');
+                } else if (lowerCommand.includes('modify') || lowerCommand.includes('file')) {
+                    const filePath = command.match(/file:\s*([^\s]+)/)?.[1] || 'config.json';
+                    return this.modifyFile(filePath, 'update');
+                } else if (lowerCommand.includes('update') || lowerCommand.includes('knowledge')) {
+                    return this.updateKnowledgeBase('general', command);
+                } else if (lowerCommand.includes('cross') || lowerCommand.includes('reference')) {
+                    return this.crossReference(command);
+                } else if (lowerCommand.includes('optimize')) {
+                    return this.optimizeResponse(command);
+                } else {
+                    return "Command processed. NEXUS ready for next operation.";
+                }
+            }
+        }
+
+        // Initialize NEXUS
+        const nexus = new NexusMinion();
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        // Make minion container draggable
+        const minionContainer = document.getElementById('minionContainer');
+        
+        minionContainer.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('capability-btn') || e.target.classList.contains('file-input') || e.target.classList.contains('mode-toggle')) return;
+            isDragging = true;
+            dragOffset.x = e.clientX - minionContainer.offsetLeft;
+            dragOffset.y = e.clientY - minionContainer.offsetTop;
+            minionContainer.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                minionContainer.style.left = (e.clientX - dragOffset.x) + 'px';
+                minionContainer.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            minionContainer.style.cursor = 'move';
+        });
+
+        // Mode toggle functionality
+        function toggleMode() {
+            const modeToggle = document.getElementById('modeToggle');
+            const integrationOverlay = document.getElementById('integrationOverlay');
+            
+            if (nexus.mode === 'standalone') {
+                integrationOverlay.classList.add('active');
+                setTimeout(() => {
+                    nexus.switchMode('integrated');
+                    modeToggle.textContent = 'MODE 2';
+                    minionContainer.classList.add('integrated');
+                }, 3000);
+            } else {
+                nexus.switchMode('standalone');
+                modeToggle.textContent = 'MODE 1';
+                minionContainer.classList.remove('integrated');
+            }
+        }
+
+        function completeIntegration() {
+            const integrationOverlay = document.getElementById('integrationOverlay');
+            integrationOverlay.classList.remove('active');
+        }
+
+        // Capability functions
+        function factCheck() {
+            nexus.factCheck("Current query");
+            showMinionChat();
+            addMinionMessage("NEXUS: Initiating fact-checking protocol...", false);
+        }
+
+        function contextLoad() {
+            nexus.loadContext("user");
+            showMinionChat();
+            addMinionMessage("NEXUS: Loading user context and conversation history...", false);
+        }
+
+        function fileModify() {
+            const filePath = document.getElementById('filePathInput').value || 'priestess_config.json';
+            nexus.modifyFile(filePath, 'update');
+            showMinionChat();
+            addMinionMessage(`NEXUS: Modifying file: ${filePath}`, false);
+        }
+
+        function updateKnowledge() {
+            nexus.updateKnowledgeBase("current_topic", "new_information");
+            showMinionChat();
+            addMinionMessage("NEXUS: Updating knowledge base with latest information...", false);
+        }
+
+        function crossReference() {
+            nexus.crossReference("current_topic");
+            showMinionChat();
+            addMinionMessage("NEXUS: Cross-referencing information across databases...", false);
+        }
+
+        function optimizeResponse() {
+            nexus.optimizeResponse("current_response");
+            showMinionChat();
+            addMinionMessage("NEXUS: Optimizing response parameters...", false);
+        }
+
+        function executeFileOperation() {
+            const filePath = document.getElementById('filePathInput').value;
+            if (filePath) {
+                fileModify();
+            } else {
+                alert('Please specify a file path');
+            }
+        }
+
+        // Chat functionality
+        function showMinionChat() {
+            document.getElementById('minionChat').classList.add('active');
+        }
+
+        function toggleChat() {
+            document.getElementById('minionChat').classList.toggle('active');
+        }
+
+        function addMinionMessage(message, isUser) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginBottom = '8px';
+            messageDiv.style.color = isUser ? '#00ffff' : '#ff0080';
+            messageDiv.innerHTML = `<strong>${isUser ? 'USER' : 'NEXUS'}:</strong> ${message}`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMinionMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (message) {
+                addMinionMessage(message, true);
+                chatInput.value = '';
+                
+                // Process command
+                setTimeout(() => {
+                    const response = nexus.processCommand(message);
+                    addMinionMessage(response, false);
+                }, 500);
+            }
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') {
+                sendMinionMessage();
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            nexus.updateStatusDisplay();
+            nexus.logActivity("NEXUS minion system initialized");
+        });
+
+        // Auto-update activity log
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% chance every 5 seconds
+                const activities = [
+                    "Monitoring neural pathways",
+                    "Scanning for optimization opportunities",
+                    "Updating internal databases",
+                    "Cross-referencing conversation context",
+                    "Analyzing response patterns"
+                ];
+                nexus.logActivity(activities[Math.floor(Math.random() * activities.length)]);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
