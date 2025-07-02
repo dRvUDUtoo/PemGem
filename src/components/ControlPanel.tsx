@@ -7,6 +7,16 @@ interface ControlPanelProps {
   onNexusPosition?: (x: number, y: number) => void;
 }
 
+interface Settings {
+  priestessSize: { width: number; height: number };
+  nexusSize: { width: number; height: number };
+  priestessPos: { x: number; y: number };
+  nexusPos: { x: number; y: number };
+  fontSize: number;
+  containerPadding: number;
+  autoFit: boolean;
+}
+
 const ControlPanel: React.FC<ControlPanelProps> = ({
   onPriestessResize,
   onNexusResize,
@@ -14,54 +24,139 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onNexusPosition
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [priestessSize, setPriestessSize] = useState({ width: 1024, height: 768 });
-  const [nexusSize, setNexusSize] = useState({ width: 280, height: 350 });
-  const [priestessPos, setPriestessPos] = useState({ x: 0, y: 0 });
-  const [nexusPos, setNexusPos] = useState({ x: 20, y: 20 });
-  const [fontSize, setFontSize] = useState(14);
-  const [containerPadding, setContainerPadding] = useState(20);
-  const [autoFit, setAutoFit] = useState(true);
+  
+  // Load settings from localStorage or use defaults
+  const loadSettings = (): Settings => {
+    try {
+      const saved = localStorage.getItem('priestess-control-settings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.warn('Failed to load settings from localStorage');
+    }
+    
+    return {
+      priestessSize: { width: 1024, height: 768 },
+      nexusSize: { width: 280, height: 350 },
+      priestessPos: { x: 50, y: 50 },
+      nexusPos: { x: window.innerWidth - 320, y: 20 },
+      fontSize: 14,
+      containerPadding: 20,
+      autoFit: false
+    };
+  };
+
+  const [settings, setSettings] = useState<Settings>(loadSettings);
+
+  // Save settings to localStorage whenever they change
+  const saveSettings = (newSettings: Settings) => {
+    try {
+      localStorage.setItem('priestess-control-settings', JSON.stringify(newSettings));
+    } catch (error) {
+      console.warn('Failed to save settings to localStorage');
+    }
+  };
+
+  // Update settings and save
+  const updateSettings = (updates: Partial<Settings>) => {
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    saveSettings(newSettings);
+  };
+
+  // Collision detection function
+  const checkCollision = (rect1: any, rect2: any) => {
+    return !(rect1.x + rect1.width < rect2.x || 
+             rect2.x + rect2.width < rect1.x || 
+             rect1.y + rect1.height < rect2.y || 
+             rect2.y + rect2.height < rect1.y);
+  };
+
+  // Auto-position to avoid overlaps
+  const autoPosition = () => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    
+    // Position Priestess in center-left
+    const priestessX = Math.max(20, (vw - settings.priestessSize.width) / 4);
+    const priestessY = Math.max(20, (vh - settings.priestessSize.height) / 2);
+    
+    // Position NEXUS in top-right, avoiding Priestess
+    let nexusX = vw - settings.nexusSize.width - 20;
+    let nexusY = 20;
+    
+    const priestessRect = {
+      x: priestessX,
+      y: priestessY,
+      width: settings.priestessSize.width,
+      height: settings.priestessSize.height
+    };
+    
+    const nexusRect = {
+      x: nexusX,
+      y: nexusY,
+      width: settings.nexusSize.width,
+      height: settings.nexusSize.height
+    };
+    
+    // If they collide, move NEXUS
+    if (checkCollision(priestessRect, nexusRect)) {
+      // Try bottom-right
+      nexusY = vh - settings.nexusSize.height - 20;
+      nexusRect.y = nexusY;
+      
+      // If still colliding, move to left side
+      if (checkCollision(priestessRect, nexusRect)) {
+        nexusX = 20;
+        nexusY = 20;
+      }
+    }
+    
+    updateSettings({
+      priestessPos: { x: priestessX, y: priestessY },
+      nexusPos: { x: nexusX, y: nexusY }
+    });
+  };
 
   // Apply global CSS variables for dynamic sizing
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--priestess-width', `${priestessSize.width}px`);
-    root.style.setProperty('--priestess-height', `${priestessSize.height}px`);
-    root.style.setProperty('--nexus-width', `${nexusSize.width}px`);
-    root.style.setProperty('--nexus-height', `${nexusSize.height}px`);
-    root.style.setProperty('--base-font-size', `${fontSize}px`);
-    root.style.setProperty('--container-padding', `${containerPadding}px`);
-    root.style.setProperty('--priestess-x', `${priestessPos.x}px`);
-    root.style.setProperty('--priestess-y', `${priestessPos.y}px`);
-    root.style.setProperty('--nexus-x', `${nexusPos.x}px`);
-    root.style.setProperty('--nexus-y', `${nexusPos.y}px`);
-  }, [priestessSize, nexusSize, fontSize, containerPadding, priestessPos, nexusPos]);
+    root.style.setProperty('--priestess-width', `${settings.priestessSize.width}px`);
+    root.style.setProperty('--priestess-height', `${settings.priestessSize.height}px`);
+    root.style.setProperty('--nexus-width', `${settings.nexusSize.width}px`);
+    root.style.setProperty('--nexus-height', `${settings.nexusSize.height}px`);
+    root.style.setProperty('--base-font-size', `${settings.fontSize}px`);
+    root.style.setProperty('--container-padding', `${settings.containerPadding}px`);
+    root.style.setProperty('--priestess-x', `${settings.priestessPos.x}px`);
+    root.style.setProperty('--priestess-y', `${settings.priestessPos.y}px`);
+    root.style.setProperty('--nexus-x', `${settings.nexusPos.x}px`);
+    root.style.setProperty('--nexus-y', `${settings.nexusPos.y}px`);
+  }, [settings]);
 
   // Auto-fit functionality
   useEffect(() => {
-    if (autoFit) {
+    if (settings.autoFit) {
       const handleResize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         
-        // Auto-adjust Priestess to fit screen
-        setPriestessSize({
-          width: Math.min(1024, vw - 40),
-          height: Math.min(768, vh - 40)
+        updateSettings({
+          priestessSize: {
+            width: Math.min(1024, vw - 40),
+            height: Math.min(768, vh - 40)
+          }
         });
         
-        // Auto-adjust NEXUS position to avoid overlap
-        setNexusPos({
-          x: Math.max(20, vw - nexusSize.width - 20),
-          y: 20
-        });
+        // Auto-position after resize
+        setTimeout(autoPosition, 100);
       };
 
       handleResize();
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
     }
-  }, [autoFit, nexusSize.width]);
+  }, [settings.autoFit]);
 
   const presets = {
     mobile: { width: 360, height: 640 },
@@ -71,31 +166,40 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   };
 
   const applyPreset = (preset: keyof typeof presets) => {
-    setPriestessSize(presets[preset]);
+    updateSettings({
+      priestessSize: presets[preset]
+    });
+    setTimeout(autoPosition, 100);
   };
 
   const resetToDefaults = () => {
-    setPriestessSize({ width: 1024, height: 768 });
-    setNexusSize({ width: 280, height: 350 });
-    setPriestessPos({ x: 0, y: 0 });
-    setNexusPos({ x: 20, y: 20 });
-    setFontSize(14);
-    setContainerPadding(20);
+    const defaults = {
+      priestessSize: { width: 1024, height: 768 },
+      nexusSize: { width: 280, height: 350 },
+      priestessPos: { x: 50, y: 50 },
+      nexusPos: { x: window.innerWidth - 320, y: 20 },
+      fontSize: 14,
+      containerPadding: 20,
+      autoFit: false
+    };
+    setSettings(defaults);
+    saveSettings(defaults);
   };
 
   const fitToScreen = () => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     
-    setPriestessSize({
-      width: vw - 40,
-      height: vh - 40
-    });
-    setPriestessPos({ x: 20, y: 20 });
-    
-    setNexusPos({
-      x: vw - nexusSize.width - 20,
-      y: 20
+    updateSettings({
+      priestessSize: {
+        width: vw - 40,
+        height: vh - 40
+      },
+      priestessPos: { x: 20, y: 20 },
+      nexusPos: {
+        x: vw - settings.nexusSize.width - 20,
+        y: 20
+      }
     });
   };
 
@@ -134,8 +238,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           position: absolute;
           top: 60px;
           left: 0;
-          width: 400px;
-          max-height: 80vh;
+          width: 420px;
+          max-height: 85vh;
           background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 0, 62, 0.9) 50%, rgba(13, 20, 33, 0.95) 100%);
           border: 2px solid #00ffff;
           border-radius: 16px;
@@ -243,6 +347,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           display: flex;
           gap: 8px;
           margin-top: 15px;
+          flex-wrap: wrap;
         }
 
         .toggle-switch {
@@ -270,7 +375,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           background: white;
           border-radius: 50%;
           transition: all 0.3s ease;
-          transform: ${autoFit ? 'translateX(24px)' : 'translateX(0)'};
+          transform: ${settings.autoFit ? 'translateX(24px)' : 'translateX(0)'};
         }
 
         .status-indicator {
@@ -290,6 +395,17 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           border-radius: 50%;
           background: #00ff00;
           animation: pulse 2s infinite;
+        }
+
+        .collision-warning {
+          background: rgba(255, 165, 0, 0.2);
+          border: 1px solid #ffa500;
+          border-radius: 6px;
+          padding: 8px;
+          margin: 10px 0;
+          color: #ffa500;
+          font-size: 0.7rem;
+          text-align: center;
         }
 
         @keyframes pulse {
@@ -331,14 +447,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="320"
                 max={window.innerWidth}
-                value={priestessSize.width}
-                onChange={(e) => setPriestessSize(prev => ({ ...prev, width: parseInt(e.target.value) }))}
+                value={settings.priestessSize.width}
+                onChange={(e) => updateSettings({
+                  priestessSize: { ...settings.priestessSize, width: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={priestessSize.width}
-                onChange={(e) => setPriestessSize(prev => ({ ...prev, width: parseInt(e.target.value) || 320 }))}
+                value={settings.priestessSize.width}
+                onChange={(e) => updateSettings({
+                  priestessSize: { ...settings.priestessSize, width: parseInt(e.target.value) || 320 }
+                })}
               />
             </div>
 
@@ -349,14 +469,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="240"
                 max={window.innerHeight}
-                value={priestessSize.height}
-                onChange={(e) => setPriestessSize(prev => ({ ...prev, height: parseInt(e.target.value) }))}
+                value={settings.priestessSize.height}
+                onChange={(e) => updateSettings({
+                  priestessSize: { ...settings.priestessSize, height: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={priestessSize.height}
-                onChange={(e) => setPriestessSize(prev => ({ ...prev, height: parseInt(e.target.value) || 240 }))}
+                value={settings.priestessSize.height}
+                onChange={(e) => updateSettings({
+                  priestessSize: { ...settings.priestessSize, height: parseInt(e.target.value) || 240 }
+                })}
               />
             </div>
 
@@ -366,15 +490,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 type="range"
                 className="control-slider"
                 min="0"
-                max={window.innerWidth - priestessSize.width}
-                value={priestessPos.x}
-                onChange={(e) => setPriestessPos(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+                max={window.innerWidth - settings.priestessSize.width}
+                value={settings.priestessPos.x}
+                onChange={(e) => updateSettings({
+                  priestessPos: { ...settings.priestessPos, x: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={priestessPos.x}
-                onChange={(e) => setPriestessPos(prev => ({ ...prev, x: parseInt(e.target.value) || 0 }))}
+                value={settings.priestessPos.x}
+                onChange={(e) => updateSettings({
+                  priestessPos: { ...settings.priestessPos, x: parseInt(e.target.value) || 0 }
+                })}
               />
             </div>
 
@@ -384,15 +512,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 type="range"
                 className="control-slider"
                 min="0"
-                max={window.innerHeight - priestessSize.height}
-                value={priestessPos.y}
-                onChange={(e) => setPriestessPos(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+                max={window.innerHeight - settings.priestessSize.height}
+                value={settings.priestessPos.y}
+                onChange={(e) => updateSettings({
+                  priestessPos: { ...settings.priestessPos, y: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={priestessPos.y}
-                onChange={(e) => setPriestessPos(prev => ({ ...prev, y: parseInt(e.target.value) || 0 }))}
+                value={settings.priestessPos.y}
+                onChange={(e) => updateSettings({
+                  priestessPos: { ...settings.priestessPos, y: parseInt(e.target.value) || 0 }
+                })}
               />
             </div>
 
@@ -414,14 +546,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="200"
                 max="500"
-                value={nexusSize.width}
-                onChange={(e) => setNexusSize(prev => ({ ...prev, width: parseInt(e.target.value) }))}
+                value={settings.nexusSize.width}
+                onChange={(e) => updateSettings({
+                  nexusSize: { ...settings.nexusSize, width: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={nexusSize.width}
-                onChange={(e) => setNexusSize(prev => ({ ...prev, width: parseInt(e.target.value) || 200 }))}
+                value={settings.nexusSize.width}
+                onChange={(e) => updateSettings({
+                  nexusSize: { ...settings.nexusSize, width: parseInt(e.target.value) || 200 }
+                })}
               />
             </div>
 
@@ -432,14 +568,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="250"
                 max="600"
-                value={nexusSize.height}
-                onChange={(e) => setNexusSize(prev => ({ ...prev, height: parseInt(e.target.value) }))}
+                value={settings.nexusSize.height}
+                onChange={(e) => updateSettings({
+                  nexusSize: { ...settings.nexusSize, height: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={nexusSize.height}
-                onChange={(e) => setNexusSize(prev => ({ ...prev, height: parseInt(e.target.value) || 250 }))}
+                value={settings.nexusSize.height}
+                onChange={(e) => updateSettings({
+                  nexusSize: { ...settings.nexusSize, height: parseInt(e.target.value) || 250 }
+                })}
               />
             </div>
 
@@ -449,15 +589,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 type="range"
                 className="control-slider"
                 min="0"
-                max={window.innerWidth - nexusSize.width}
-                value={nexusPos.x}
-                onChange={(e) => setNexusPos(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+                max={window.innerWidth - settings.nexusSize.width}
+                value={settings.nexusPos.x}
+                onChange={(e) => updateSettings({
+                  nexusPos: { ...settings.nexusPos, x: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={nexusPos.x}
-                onChange={(e) => setNexusPos(prev => ({ ...prev, x: parseInt(e.target.value) || 0 }))}
+                value={settings.nexusPos.x}
+                onChange={(e) => updateSettings({
+                  nexusPos: { ...settings.nexusPos, x: parseInt(e.target.value) || 0 }
+                })}
               />
             </div>
 
@@ -467,15 +611,19 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 type="range"
                 className="control-slider"
                 min="0"
-                max={window.innerHeight - nexusSize.height}
-                value={nexusPos.y}
-                onChange={(e) => setNexusPos(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+                max={window.innerHeight - settings.nexusSize.height}
+                value={settings.nexusPos.y}
+                onChange={(e) => updateSettings({
+                  nexusPos: { ...settings.nexusPos, y: parseInt(e.target.value) }
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={nexusPos.y}
-                onChange={(e) => setNexusPos(prev => ({ ...prev, y: parseInt(e.target.value) || 0 }))}
+                value={settings.nexusPos.y}
+                onChange={(e) => updateSettings({
+                  nexusPos: { ...settings.nexusPos, y: parseInt(e.target.value) || 0 }
+                })}
               />
             </div>
           </div>
@@ -490,14 +638,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="10"
                 max="24"
-                value={fontSize}
-                onChange={(e) => setFontSize(parseInt(e.target.value))}
+                value={settings.fontSize}
+                onChange={(e) => updateSettings({
+                  fontSize: parseInt(e.target.value)
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={fontSize}
-                onChange={(e) => setFontSize(parseInt(e.target.value) || 14)}
+                value={settings.fontSize}
+                onChange={(e) => updateSettings({
+                  fontSize: parseInt(e.target.value) || 14
+                })}
               />
             </div>
 
@@ -508,22 +660,26 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 className="control-slider"
                 min="5"
                 max="50"
-                value={containerPadding}
-                onChange={(e) => setContainerPadding(parseInt(e.target.value))}
+                value={settings.containerPadding}
+                onChange={(e) => updateSettings({
+                  containerPadding: parseInt(e.target.value)
+                })}
               />
               <input
                 type="number"
                 className="control-input"
-                value={containerPadding}
-                onChange={(e) => setContainerPadding(parseInt(e.target.value) || 20)}
+                value={settings.containerPadding}
+                onChange={(e) => updateSettings({
+                  containerPadding: parseInt(e.target.value) || 20
+                })}
               />
             </div>
 
             <div className="control-row">
               <span className="control-label">Auto-Fit:</span>
               <div 
-                className={`toggle-switch ${autoFit ? 'active' : ''}`}
-                onClick={() => setAutoFit(!autoFit)}
+                className={`toggle-switch ${settings.autoFit ? 'active' : ''}`}
+                onClick={() => updateSettings({ autoFit: !settings.autoFit })}
               ></div>
             </div>
           </div>
@@ -535,11 +691,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             <button className="control-button" onClick={fitToScreen}>
               Fit to Screen
             </button>
+            <button className="control-button" onClick={autoPosition}>
+              Auto Position
+            </button>
           </div>
 
           <div className="status-indicator">
             <div className="status-dot"></div>
-            <span style={{ fontSize: '0.7rem' }}>Control Panel Active - All elements responsive</span>
+            <span style={{ fontSize: '0.7rem' }}>Settings Saved - All changes persist</span>
+          </div>
+
+          <div className="collision-warning">
+            ⚠️ Settings are automatically saved and will persist when tools are reopened
           </div>
         </div>
       </div>
