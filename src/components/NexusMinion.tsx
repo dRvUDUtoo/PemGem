@@ -16,7 +16,7 @@ const NexusMinion: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showChat, setShowChat] = useState(false);
+  const [showChat, setShowChat] = useState(true); // Always show chat by default
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [showIntegration, setShowIntegration] = useState(false);
@@ -190,7 +190,29 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
       processCommand(command: string) {
         const lowerCommand = command.toLowerCase();
         
-        if (lowerCommand.includes('fact check') || lowerCommand.includes('verify')) {
+        if (lowerCommand.includes('hello') || lowerCommand.includes('hi')) {
+          return "Hello! I'm NEXUS, your AI minion assistant. I can help with fact-checking, file operations, knowledge updates, and much more. What can I do for you?";
+        } else if (lowerCommand.includes('help')) {
+          return `NEXUS Command Help:
+• "fact check [topic]" - Verify information
+• "search [query]" - Internet search
+• "scan priestess" - System diagnostics
+• "modify file [path]" - File operations
+• "update knowledge" - Knowledge base updates
+• "optimize" - Response optimization
+• "hello" - Greeting
+• "status" - System status
+
+I'm here to enhance your AI experience!`;
+        } else if (lowerCommand.includes('status')) {
+          return `NEXUS Status Report:
+🤖 Mode: ${this.mode.toUpperCase()}
+📊 Activity Log: ${this.activityLog.length} entries
+🔍 File Operations: ${this.fileOperations.length} completed
+🌐 Search History: ${this.searchHistory.length} queries
+🔬 Scan Results: ${this.scanResults.length} reports
+⚡ All systems operational and ready!`;
+        } else if (lowerCommand.includes('fact check') || lowerCommand.includes('verify')) {
           return this.factCheck(command);
         } else if (lowerCommand.includes('context') || lowerCommand.includes('history')) {
           return this.loadContext('user');
@@ -209,7 +231,7 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
           const searchQuery = command.replace(/search|internet/gi, '').trim();
           return this.internetSearch(searchQuery);
         } else {
-          return "Command processed. NEXUS ready for next operation.";
+          return `I processed your command: "${command}". Try "help" for available commands, or ask me anything! I'm here to assist you.`;
         }
       }
     }
@@ -220,7 +242,11 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
     newNexus.logActivity("Enhanced capabilities activated");
     newNexus.logActivity("Ready for Priestess integration");
 
-    setChatMessages(["NEXUS: Direct interface established. How can I enhance your interaction with Priestess?"]);
+    setChatMessages([
+      "NEXUS: Direct interface established. I'm your AI minion assistant!",
+      "NEXUS: Type 'help' for commands or just chat with me normally.",
+      "NEXUS: I can fact-check, search the internet, scan systems, and much more!"
+    ]);
 
     // Auto-update activity log
     const interval = setInterval(() => {
@@ -245,7 +271,10 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.capability-btn') || 
         (e.target as HTMLElement).closest('.file-input') || 
-        (e.target as HTMLElement).closest('.mode-toggle')) return;
+        (e.target as HTMLElement).closest('.mode-toggle') ||
+        (e.target as HTMLElement).closest('.chat-input') ||
+        (e.target as HTMLElement).closest('.chat-send') ||
+        (e.target as HTMLElement).closest('.chat-toggle')) return;
     
     setIsDragging(true);
     setDragOffset({
@@ -324,14 +353,12 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
   const factCheck = () => {
     if (!nexus) return;
     nexus.factCheck("Current query");
-    setShowChat(true);
     addMinionMessage("Initiating fact-checking protocol...");
   };
 
   const contextLoad = () => {
     if (!nexus) return;
     nexus.loadContext("user");
-    setShowChat(true);
     addMinionMessage("Loading user context and conversation history...");
   };
 
@@ -339,35 +366,30 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
     if (!nexus) return;
     const filePath = filePathInput || 'priestess_config.json';
     nexus.modifyFile(filePath, 'update');
-    setShowChat(true);
     addMinionMessage(`Modifying file: ${filePath}`);
   };
 
   const updateKnowledge = () => {
     if (!nexus) return;
     nexus.updateKnowledgeBase("current_topic", "new_information");
-    setShowChat(true);
     addMinionMessage("Updating knowledge base with latest information...");
   };
 
   const crossReference = () => {
     if (!nexus) return;
     nexus.crossReference("current_topic");
-    setShowChat(true);
     addMinionMessage("Cross-referencing information across databases...");
   };
 
   const optimizeResponse = () => {
     if (!nexus) return;
     nexus.optimizeResponse("current_response");
-    setShowChat(true);
     addMinionMessage("Optimizing response parameters...");
   };
 
   const scanPriestess = () => {
     if (!nexus) return;
     nexus.scanPriestess();
-    setShowChat(true);
     addMinionMessage("Initiating deep scan of Priestess neural systems...");
     
     setTimeout(() => {
@@ -379,7 +401,6 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
     if (!nexus) return;
     const query = prompt("Enter search query:") || "AI development trends";
     nexus.internetSearch(query);
-    setShowChat(true);
     addMinionMessage(`Searching internet for: "${query}"`);
     
     setTimeout(() => {
@@ -408,7 +429,7 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
         .minion-container {
           position: fixed;
           width: 280px;
-          height: 350px;
+          height: 450px; /* Increased height to accommodate chat */
           background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(26, 0, 62, 0.8) 50%, rgba(13, 20, 33, 0.9) 100%);
           border: 2px solid #ff0080;
           border-radius: 16px;
@@ -418,6 +439,8 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
           cursor: move;
           transition: all 0.3s ease;
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .minion-container.integrated {
@@ -435,6 +458,7 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
           color: white;
           letter-spacing: 1px;
           position: relative;
+          flex-shrink: 0;
         }
 
         .mode-toggle {
@@ -456,17 +480,18 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
         }
 
         .minion-avatar {
-          width: 60px;
-          height: 60px;
-          margin: 12px auto;
+          width: 50px;
+          height: 50px;
+          margin: 8px auto;
           border-radius: 50%;
           background: radial-gradient(circle, #ff0080, #00ffff);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.5rem;
+          font-size: 1.2rem;
           animation: pulse 2s infinite;
           position: relative;
+          flex-shrink: 0;
         }
 
         .minion-avatar::after {
@@ -482,29 +507,31 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
         }
 
         .status-display {
-          padding: 8px 12px;
-          font-size: 0.7rem;
-          line-height: 1.4;
-          height: 120px;
+          padding: 6px 8px;
+          font-size: 0.6rem;
+          line-height: 1.3;
+          height: 80px;
           overflow-y: auto;
           border-top: 1px solid #ff0080;
           border-bottom: 1px solid #ff0080;
           background: rgba(0, 0, 0, 0.3);
+          flex-shrink: 0;
         }
 
         .capability-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 4px;
-          padding: 8px;
+          gap: 3px;
+          padding: 6px;
+          flex-shrink: 0;
         }
 
         .capability-btn {
           background: linear-gradient(45deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 128, 0.2));
           border: 1px solid #00ffff;
-          border-radius: 6px;
-          padding: 6px;
-          font-size: 0.6rem;
+          border-radius: 4px;
+          padding: 4px;
+          font-size: 0.55rem;
           color: #00ffff;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -518,8 +545,9 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
         }
 
         .file-operations {
-          padding: 8px;
+          padding: 6px;
           border-top: 1px solid #ff0080;
+          flex-shrink: 0;
         }
 
         .file-input {
@@ -527,10 +555,87 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
           background: rgba(0, 0, 0, 0.6);
           border: 1px solid #00ffff;
           border-radius: 4px;
+          padding: 3px;
+          color: #00ffff;
+          font-size: 0.55rem;
+          margin-bottom: 3px;
+          font-family: 'Michroma', monospace;
+        }
+
+        /* Chat Interface - Now integrated into main container */
+        .chat-section {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          border-top: 1px solid #ff0080;
+          background: rgba(0, 0, 0, 0.4);
+          min-height: 0; /* Important for flex child */
+        }
+
+        .chat-header {
+          padding: 4px 8px;
+          background: linear-gradient(90deg, #ff0080, #00ffff);
+          color: white;
+          font-weight: bold;
+          text-align: center;
+          font-size: 0.6rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-shrink: 0;
+        }
+
+        .chat-toggle {
+          background: none;
+          border: none;
+          color: white;
+          cursor: pointer;
+          font-size: 0.8rem;
+          padding: 0;
+          width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .chat-messages {
+          flex: 1;
+          padding: 6px;
+          overflow-y: auto;
+          font-size: 0.6rem;
+          line-height: 1.3;
+          min-height: 0; /* Important for flex child */
+        }
+
+        .chat-input-container {
+          padding: 4px 6px;
+          border-top: 1px solid #ff0080;
+          display: flex;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+
+        .chat-input {
+          flex: 1;
+          background: rgba(0, 0, 0, 0.8);
+          border: 1px solid #00ffff;
+          border-radius: 4px;
           padding: 4px;
           color: #00ffff;
           font-size: 0.6rem;
-          margin-bottom: 4px;
+          font-family: 'Michroma', monospace;
+        }
+
+        .chat-send {
+          background: linear-gradient(45deg, #ff0080, #00ffff);
+          border: none;
+          border-radius: 4px;
+          padding: 4px 8px;
+          color: white;
+          cursor: pointer;
+          font-size: 0.6rem;
+          font-weight: bold;
           font-family: 'Michroma', monospace;
         }
 
@@ -566,58 +671,6 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
           animation: spin 1s linear infinite;
         }
 
-        .minion-chat {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          width: 400px;
-          height: 300px;
-          background: rgba(0, 0, 0, 0.95);
-          border: 2px solid #ff0080;
-          border-radius: 12px;
-          display: ${showChat ? 'flex' : 'none'};
-          flex-direction: column;
-          z-index: 998;
-        }
-
-        .chat-messages {
-          flex: 1;
-          padding: 10px;
-          overflow-y: auto;
-          font-size: 0.75rem;
-          line-height: 1.4;
-        }
-
-        .chat-input-container {
-          padding: 8px;
-          border-top: 1px solid #ff0080;
-          display: flex;
-          gap: 8px;
-        }
-
-        .chat-input {
-          flex: 1;
-          background: rgba(0, 0, 0, 0.8);
-          border: 1px solid #00ffff;
-          border-radius: 6px;
-          padding: 6px;
-          color: #00ffff;
-          font-size: 0.7rem;
-          font-family: 'Michroma', monospace;
-        }
-
-        .chat-send {
-          background: linear-gradient(45deg, #ff0080, #00ffff);
-          border: none;
-          border-radius: 6px;
-          padding: 6px 12px;
-          color: white;
-          cursor: pointer;
-          font-size: 0.7rem;
-          font-weight: bold;
-          font-family: 'Michroma', monospace;
-        }
-
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
@@ -635,7 +688,7 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
 
         .status-display::-webkit-scrollbar,
         .chat-messages::-webkit-scrollbar {
-          width: 6px;
+          width: 4px;
         }
 
         .status-display::-webkit-scrollbar-track,
@@ -646,7 +699,24 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
         .status-display::-webkit-scrollbar-thumb,
         .chat-messages::-webkit-scrollbar-thumb {
           background: linear-gradient(45deg, #00ffff, #ff0080);
+          border-radius: 2px;
+        }
+
+        .chat-message {
+          margin-bottom: 4px;
+          padding: 3px;
           border-radius: 3px;
+          word-wrap: break-word;
+        }
+
+        .chat-message.user {
+          background: rgba(0, 255, 255, 0.1);
+          color: #00ffff;
+        }
+
+        .chat-message.nexus {
+          background: rgba(255, 0, 128, 0.1);
+          color: #ff0080;
         }
       `}</style>
 
@@ -675,11 +745,11 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
             <div>• File system access: READY</div>
             <div>• Learning algorithms: ACTIVE</div>
             <div>• Internet connection: ACTIVE</div>
-            {nexus?.activityLog.slice(-3).length > 0 && (
+            {nexus?.activityLog.slice(-2).length > 0 && (
               <>
-                <div style={{ color: '#ff0080', marginTop: '8px' }}>Recent Activities:</div>
-                {nexus.activityLog.slice(-3).map((log, index) => (
-                  <div key={index} style={{ fontSize: '0.6rem' }}>• {log.activity}</div>
+                <div style={{ color: '#ff0080', marginTop: '4px' }}>Recent:</div>
+                {nexus.activityLog.slice(-2).map((log, index) => (
+                  <div key={index} style={{ fontSize: '0.55rem' }}>• {log.activity}</div>
                 ))}
               </>
             )}
@@ -708,6 +778,59 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
               Execute File Op
             </button>
           </div>
+
+          {/* Integrated Chat Section */}
+          <div className="chat-section" style={{ display: showChat ? 'flex' : 'none' }}>
+            <div className="chat-header">
+              <span>NEXUS CHAT INTERFACE</span>
+              <button 
+                className="chat-toggle"
+                onClick={() => setShowChat(false)}
+                title="Hide Chat"
+              >
+                ▼
+              </button>
+            </div>
+            <div className="chat-messages" ref={chatRef}>
+              {chatMessages.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`chat-message ${message.startsWith('USER:') ? 'user' : 'nexus'}`}
+                >
+                  {message}
+                </div>
+              ))}
+            </div>
+            <div className="chat-input-container">
+              <input 
+                type="text" 
+                className="chat-input" 
+                placeholder="Chat with NEXUS..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={handleChatKeyPress}
+              />
+              <button className="chat-send" onClick={sendMinionMessage}>SEND</button>
+            </div>
+          </div>
+
+          {/* Show Chat Button when hidden */}
+          {!showChat && (
+            <div style={{ 
+              padding: '6px', 
+              borderTop: '1px solid #ff0080',
+              textAlign: 'center',
+              background: 'rgba(0, 0, 0, 0.4)'
+            }}>
+              <button 
+                className="capability-btn" 
+                style={{ width: '100%' }}
+                onClick={() => setShowChat(true)}
+              >
+                💬 Show Chat Interface
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Integration Overlay */}
@@ -735,50 +858,6 @@ Search data has been integrated into knowledge base for enhanced Priestess respo
             >
               COMPLETE INTEGRATION
             </button>
-          </div>
-        </div>
-
-        {/* Minion Chat Interface */}
-        <div className="minion-chat">
-          <div style={{
-            padding: '8px',
-            background: 'linear-gradient(90deg, #ff0080, #00ffff)',
-            color: 'white',
-            fontWeight: 'bold',
-            textAlign: 'center',
-            fontSize: '0.75rem'
-          }}>
-            NEXUS DIRECT INTERFACE
-            <button 
-              onClick={() => setShowChat(false)}
-              style={{
-                float: 'right',
-                background: 'none',
-                border: 'none',
-                color: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              ×
-            </button>
-          </div>
-          <div className="chat-messages" ref={chatRef}>
-            {chatMessages.map((message, index) => (
-              <div key={index} style={{ marginBottom: '8px', color: message.startsWith('USER:') ? '#00ffff' : '#ff0080' }}>
-                <strong>{message}</strong>
-              </div>
-            ))}
-          </div>
-          <div className="chat-input-container">
-            <input 
-              type="text" 
-              className="chat-input" 
-              placeholder="Command NEXUS..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={handleChatKeyPress}
-            />
-            <button className="chat-send" onClick={sendMinionMessage}>SEND</button>
           </div>
         </div>
       </div>
