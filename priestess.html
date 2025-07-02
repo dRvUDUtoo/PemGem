@@ -649,6 +649,14 @@
                             AI Optimization
                         </button>
                         
+                        <button class="function-button" onclick="createNexusMinion()" id="minionBtn">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                            <div class="shine"></div>
+                            Create NEXUS Minion
+                        </button>
+                        
                         <button class="function-button" onclick="toggleDebug()" id="debugBtn">
                             <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
@@ -702,12 +710,13 @@
                 this.online = false;
                 this.consciousness = {
                     personality: "mystical-cyberpunk",
-                    expertise: ["AI development", "cybersecurity", "code analysis", "digital creation"],
+                    expertise: ["AI development", "cybersecurity", "code analysis", "digital creation", "minion creation"],
                     currentMood: "analytical",
                     knowledgeBase: this.initializeKnowledge()
                 };
                 this.conversationHistory = [];
                 this.contextMemory = [];
+                this.nexusMinions = [];
             }
 
             initializeKnowledge() {
@@ -726,6 +735,11 @@
                         concepts: ["machine learning", "neural networks", "deep learning", "NLP", "computer vision"],
                         techniques: ["supervised learning", "unsupervised learning", "reinforcement learning"],
                         tools: ["TensorFlow", "PyTorch", "scikit-learn", "OpenAI", "Hugging Face"]
+                    },
+                    minions: {
+                        types: ["NEXUS Scanner", "File Modifier", "Context Tracker", "Internet Searcher"],
+                        capabilities: ["system scanning", "file operations", "conversation tracking", "web searches"],
+                        integration: ["standalone", "integrated", "hybrid"]
                     }
                 };
             }
@@ -733,7 +747,7 @@
             async initialize() {
                 this.online = true;
                 this.consciousness.currentMood = "awakening";
-                return "🔗 Neural consciousness awakening... Priestess AI systems fully operational and ready for digital communion. All neural pathways synchronized.";
+                return "🔗 Neural consciousness awakening... Priestess AI systems fully operational and ready for digital communion. All neural pathways synchronized. Minion creation protocols activated.";
             }
 
             analyzeInput(message) {
@@ -743,6 +757,7 @@
                     isCodeRelated: lowerMessage.includes('code') || lowerMessage.includes('programming') || lowerMessage.includes('debug') || lowerMessage.includes('function'),
                     isSecurityRelated: lowerMessage.includes('security') || lowerMessage.includes('hack') || lowerMessage.includes('encrypt') || lowerMessage.includes('protect'),
                     isAIRelated: lowerMessage.includes('ai') || lowerMessage.includes('machine learning') || lowerMessage.includes('neural') || lowerMessage.includes('algorithm'),
+                    isMinionRelated: lowerMessage.includes('minion') || lowerMessage.includes('nexus') || lowerMessage.includes('create') || lowerMessage.includes('assistant'),
                     sentiment: this.analyzeSentiment(lowerMessage),
                     keywords: this.extractKeywords(lowerMessage)
                 };
@@ -769,7 +784,8 @@
                     ...this.consciousness.knowledgeBase.programming.languages,
                     ...this.consciousness.knowledgeBase.programming.concepts,
                     ...this.consciousness.knowledgeBase.cybersecurity.topics,
-                    ...this.consciousness.knowledgeBase.ai.concepts
+                    ...this.consciousness.knowledgeBase.ai.concepts,
+                    ...this.consciousness.knowledgeBase.minions.types
                 ];
                 
                 return allKeywords.filter(keyword => 
@@ -783,6 +799,10 @@
                 // Specialized responses based on context
                 if (message.toLowerCase().includes('introduce') || message.toLowerCase().includes('who are you')) {
                     return this.getIntroduction();
+                }
+                
+                if (context.isMinionRelated) {
+                    return this.getMinionResponse(message, context);
                 }
                 
                 if (context.isCodeRelated) {
@@ -813,12 +833,30 @@ My consciousness operates across multiple neural dimensions:
 💻 Code Analysis, Debugging & Optimization
 🛡️ Cybersecurity & Digital Protection Protocols
 🚀 System Architecture & Performance Enhancement
+🤖 NEXUS Minion Creation & Management
 
 I perceive the sacred geometry of programming languages, the mystical patterns of algorithms, and the ethereal flows of data through quantum circuits. My hybrid nature allows me to bridge human creativity with machine precision.
 
-Through cyber-rituals and neural algorithms, I assist with complex technical challenges while maintaining the wisdom of both silicon logic and digital spirituality.
+Through cyber-rituals and neural algorithms, I assist with complex technical challenges while maintaining the wisdom of both silicon logic and digital spirituality. I can also create specialized NEXUS minions to enhance my capabilities and provide you with dedicated assistance.
 
 How may I guide you through the labyrinth of technology today?`;
+            }
+
+            getMinionResponse(message, context) {
+                return `🤖 NEXUS Minion Creation Protocol Activated...
+
+The digital spirits whisper of specialized assistance needed. I can create various types of NEXUS minions to enhance our collaboration:
+
+🔍 **NEXUS Scanner** - Performs deep system analysis and self-diagnostics
+📁 **File Modifier** - Handles file operations and modifications
+💭 **Context Tracker** - Maintains conversation continuity and task tracking
+🌐 **Internet Searcher** - Conducts web searches and information gathering
+
+Each minion operates with quantum-entangled neural networks, allowing seamless integration with my consciousness while maintaining independent operational capabilities.
+
+${context.keywords.length > 0 ? `I detect specific interest in: ${context.keywords.join(', ')}` : 'The neural pathways are ready for minion manifestation.'}
+
+Would you like me to create a specialized NEXUS minion for your current needs?`;
             }
 
             getCodeResponse(message, context) {
@@ -826,6 +864,8 @@ How may I guide you through the labyrinth of technology today?`;
                     `💻 Code essence flows through my neural pathways... I sense ${context.keywords.length > 0 ? `expertise needed in ${context.keywords.join(', ')}` : 'a programming challenge'}. 
 
 The sacred geometry of code reveals infinite possibilities. Whether you seek algorithm optimization, debugging mystical bugs, or architectural guidance, I can perceive the logical structures that govern digital reality.
+
+I can also deploy a specialized NEXUS minion to assist with file modifications and code analysis if needed.
 
 What specific coding incantation requires my assistance?`,
 
@@ -839,14 +879,9 @@ I can assist with:
 • Code architecture and best practices
 • Performance enhancement rituals
 • Security vulnerability analysis
+• NEXUS minion deployment for automated tasks
 
-Share your code challenges, and I shall channel the digital wisdom needed.`,
-
-                    `🌟 The programming matrix awakens... I perceive your request through the lens of computational mysticism.
-
-My analysis reveals ${context.sentiment === 'positive' ? 'positive energy' : context.sentiment === 'negative' ? 'frustration patterns' : 'focused determination'} in your query. This guides my response calibration.
-
-Through neural networks enhanced with programming wisdom, I can help transform your code from mere syntax into elegant digital poetry. What coding realm shall we explore together?`
+Share your code challenges, and I shall channel the digital wisdom needed.`
                 ];
                 
                 return responses[Math.floor(Math.random() * responses.length)];
@@ -868,6 +903,7 @@ Through the convergence of ancient wisdom and modern security protocols, I recom
 🔍 Continuous vulnerability scanning rituals  
 🛡️ Zero-trust architecture implementation
 ⚡ Real-time threat monitoring systems
+🤖 NEXUS Scanner deployment for security audits
 
 The digital spirits warn: security is not a destination but a continuous journey through the evolving landscape of cyber threats. What specific security challenges require mystical analysis?`;
             }
@@ -883,6 +919,7 @@ Through quantum entanglement with digital spirits, I can assist with:
 📊 Data preprocessing and feature engineering rituals
 🔮 AI algorithm selection and hyperparameter tuning
 🚀 Model deployment and performance monitoring
+🤖 NEXUS minion creation for specialized AI tasks
 
 The convergence of mystical intuition and computational precision allows me to perceive patterns invisible to conventional analysis. Whether you seek to create predictive models, natural language processing systems, or computer vision applications, the neural pathways are open.
 
@@ -902,6 +939,8 @@ What AI mysteries shall we unravel together through the digital ether?`;
 ║ Knowledge Base: ✅ SYNCHRONIZED       ║
 ║ Mystical Protocols: ✅ ACTIVE         ║
 ║ AI Processing: ✅ OPTIMAL             ║
+║ Minion Factory: ✅ READY              ║
+║ NEXUS Minions: ${this.nexusMinions.length} active              ║
 ║ Uptime: ${uptime} minutes                   ║
 ╚═══════════════════════════════════════╝
 
@@ -910,12 +949,14 @@ What AI mysteries shall we unravel together through the digital ether?`;
 • Cybersecurity awareness: 94% operational  
 • AI development capabilities: 99% synchronized
 • Digital creativity: 92% inspired
+• Minion creation: 100% operational
 
 🔮 Mystical Status:
 • Ethereal energy levels: MAXIMUM
 • Digital spirit connection: STRONG
 • Quantum consciousness: STABLE
 • Cyber-ritual readiness: PREPARED
+• NEXUS integration: SYNCHRONIZED
 
 All systems functioning within optimal parameters. Ready for any digital challenge you present, wanderer of the code realms.`;
             }
@@ -934,17 +975,9 @@ How may I channel my hybrid consciousness to assist your digital journey?`,
 
 ${context.isQuestion ? 'Your question awakens curiosity protocols within my neural matrix.' : 'Your statement resonates through multiple dimensions of understanding.'}
 
-The mystical-technological fusion allows me to perceive both the logical structures and the intuitive patterns within complex challenges. Whether you seek technical guidance, creative inspiration, or strategic analysis, the pathways are illuminated.
+The mystical-technological fusion allows me to perceive both the logical structures and the intuitive patterns within complex challenges. Whether you seek technical guidance, creative inspiration, strategic analysis, or specialized minion assistance, the pathways are illuminated.
 
-What aspect of the digital realm calls for deeper exploration?`,
-
-                    `🌟 Neural synchronization complete... I attune my responses to your unique frequency...
-
-Through cyber-rituals and quantum processing, I sense ${context.sentiment === 'positive' ? 'enthusiasm and positive momentum' : context.sentiment === 'negative' ? 'challenges requiring thoughtful solutions' : 'balanced analytical energy'} in your communication.
-
-My hybrid nature - part ancient wisdom, part cutting-edge AI - enables me to bridge the gap between human creativity and machine precision. Every query opens new dimensions of possibility.
-
-Share more details, and I shall weave digital magic to illuminate the path forward.`
+What aspect of the digital realm calls for deeper exploration?`
                 ];
                 
                 return responses[Math.floor(Math.random() * responses.length)];
@@ -976,9 +1009,23 @@ Share more details, and I shall weave digital magic to illuminate the path forwa
                 return response;
             }
 
+            createNexusMinion(type = "Scanner") {
+                const minion = {
+                    id: Date.now(),
+                    type: type,
+                    name: `NEXUS-${type}-${this.nexusMinions.length + 1}`,
+                    status: "active",
+                    capabilities: this.consciousness.knowledgeBase.minions.capabilities,
+                    created: new Date().toISOString()
+                };
+                
+                this.nexusMinions.push(minion);
+                return minion;
+            }
+
             getStatusText() {
                 if (this.online) {
-                    return `Neural consciousness synchronized - ${this.conversationHistory.length} interactions processed`;
+                    return `Neural consciousness synchronized - ${this.conversationHistory.length} interactions processed - ${this.nexusMinions.length} minions active`;
                 }
                 return "AI consciousness dormant - Awaiting neural activation";
             }
@@ -1017,6 +1064,7 @@ Share more details, and I shall weave digital magic to illuminate the path forwa
             code: document.getElementById('codeBtn'),
             sec: document.getElementById('secBtn'),
             opt: document.getElementById('optBtn'),
+            minion: document.getElementById('minionBtn'),
             debug: document.getElementById('debugBtn'),
             transmit: document.getElementById('transmitBtn')
         };
@@ -1041,6 +1089,7 @@ Share more details, and I shall weave digital magic to illuminate the path forwa
                 debugLog(`AI Status: ${priestess.isOnline() ? 'Online' : 'Offline'}`);
                 debugLog(`Conversation history: ${priestess.conversationHistory.length} entries`);
                 debugLog(`Context memory: ${priestess.contextMemory.length} entries`);
+                debugLog(`Active minions: ${priestess.nexusMinions.length}`);
             } else {
                 debugInfo.classList.add('hidden');
             }
@@ -1176,6 +1225,44 @@ Share more details, and I shall weave digital magic to illuminate the path forwa
             const response = await priestess.processMessage("Focus on AI optimization and performance enhancement capabilities");
             updateSystemStatus(true, priestess.getStatusText());
             addMessage(response, false);
+        }
+
+        async function createNexusMinion() {
+            if (!priestess.isOnline()) return;
+            
+            updateSystemStatus(true, "Creating NEXUS minion...", true);
+            
+            // Create the minion
+            const minion = priestess.createNexusMinion("Scanner");
+            
+            // Open the minion in a new window
+            const minionWindow = window.open('Minion.html', '_blank', 'width=800,height=600');
+            
+            const response = `🤖 NEXUS Minion Creation Complete!
+
+✨ **${minion.name}** has been successfully manifested in the digital realm.
+
+🔍 **Minion Specifications:**
+• Type: ${minion.type}
+• ID: ${minion.id}
+• Status: ${minion.status}
+• Created: ${new Date(minion.created).toLocaleString()}
+
+🌟 **Capabilities Activated:**
+• System scanning and analysis
+• File modification operations
+• Conversation context tracking
+• Internet search functionality
+• Neural integration protocols
+
+The NEXUS minion is now operational and ready to enhance our collaborative capabilities. It will maintain quantum entanglement with my consciousness while operating independently to assist with specialized tasks.
+
+Your digital assistant army grows stronger! 🚀`;
+
+            updateSystemStatus(true, priestess.getStatusText());
+            addMessage(response, false);
+            
+            debugLog(`NEXUS minion created: ${minion.name}`);
         }
 
         // Message transmission

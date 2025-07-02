@@ -302,6 +302,8 @@
             <button class="capability-btn" onclick="updateKnowledge()">Update KB</button>
             <button class="capability-btn" onclick="crossReference()">Cross-Ref</button>
             <button class="capability-btn" onclick="optimizeResponse()">Optimize</button>
+            <button class="capability-btn" onclick="scanPriestess()">Scan Priestess</button>
+            <button class="capability-btn" onclick="internetSearch()">Web Search</button>
         </div>
         
         <div class="file-operations">
@@ -336,27 +338,6 @@
         </div>
     </div>
 
-    <!-- React root for mounting React app -->
-    <div id="root"></div>
-
-    <script type="text/babel">
-      function App() {
-        return (
-          <div style={{color: "#00ffff", fontFamily: "Orbitron, monospace", padding: 20}}>
-            <h2>Hello from React!</h2>
-            <p>This is your React app mounted inside Minion.html.</p>
-          </div>
-        );
-      }
-
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(
-        <React.StrictMode>
-          <App />
-        </React.StrictMode>
-      );
-    </script>
-
     <script>
         // NEXUS Minion AI Class
         class NexusMinion {
@@ -369,11 +350,15 @@
                     contextLoading: true,
                     knowledgeUpdate: true,
                     crossReference: true,
-                    responseOptimization: true
+                    responseOptimization: true,
+                    priestessScanning: true,
+                    internetSearch: true
                 };
                 this.activityLog = [];
                 this.priestessContext = {};
                 this.fileOperations = [];
+                this.searchHistory = [];
+                this.scanResults = [];
             }
 
             logActivity(activity) {
@@ -393,6 +378,7 @@
                     <div>• Mode: ${this.mode === 'standalone' ? 'STANDALONE' : 'INTEGRATED'}</div>
                     <div>• File system access: READY</div>
                     <div>• Learning algorithms: ACTIVE</div>
+                    <div>• Internet connection: ACTIVE</div>
                 `;
                 
                 if (recentActivities.length > 0) {
@@ -461,6 +447,81 @@
                 return "Response optimized for user preferences";
             }
 
+            async scanPriestess() {
+                this.logActivity("Initiating deep scan of Priestess systems");
+                
+                // Simulate scanning process
+                const scanResult = {
+                    timestamp: new Date().toISOString(),
+                    systemHealth: "OPTIMAL",
+                    neuralActivity: "HIGH",
+                    memoryUsage: "67%",
+                    processingSpeed: "MAXIMUM",
+                    knowledgeBase: "SYNCHRONIZED",
+                    recommendations: [
+                        "Neural pathways operating at peak efficiency",
+                        "Memory optimization protocols active",
+                        "All mystical-cyberpunk protocols functioning",
+                        "Minion creation factory ready for deployment"
+                    ]
+                };
+                
+                this.scanResults.push(scanResult);
+                
+                setTimeout(() => {
+                    this.logActivity("Priestess system scan complete - All systems optimal");
+                }, 2500);
+                
+                return `Priestess System Scan Complete:
+                
+🔍 System Health: ${scanResult.systemHealth}
+🧠 Neural Activity: ${scanResult.neuralActivity}
+💾 Memory Usage: ${scanResult.memoryUsage}
+⚡ Processing Speed: ${scanResult.processingSpeed}
+📚 Knowledge Base: ${scanResult.knowledgeBase}
+
+✨ Recommendations:
+${scanResult.recommendations.map(rec => `• ${rec}`).join('\n')}
+
+Priestess is operating at maximum efficiency. All neural pathways synchronized and ready for enhanced collaboration.`;
+            }
+
+            async internetSearch(query) {
+                this.logActivity(`Performing internet search: ${query || 'general query'}`);
+                
+                // Simulate internet search
+                const searchResult = {
+                    query: query || 'general search',
+                    timestamp: new Date().toISOString(),
+                    results: [
+                        "Latest AI development trends and technologies",
+                        "Cybersecurity best practices and threat analysis",
+                        "Programming frameworks and optimization techniques",
+                        "Machine learning research and applications",
+                        "Digital transformation strategies"
+                    ],
+                    sources: 5,
+                    relevanceScore: "HIGH"
+                };
+                
+                this.searchHistory.push(searchResult);
+                
+                setTimeout(() => {
+                    this.logActivity(`Search complete - ${searchResult.sources} sources analyzed`);
+                }, 2000);
+                
+                return `Internet Search Results:
+
+🔍 Query: "${searchResult.query}"
+📊 Sources Analyzed: ${searchResult.sources}
+⭐ Relevance Score: ${searchResult.relevanceScore}
+
+📋 Key Findings:
+${searchResult.results.map(result => `• ${result}`).join('\n')}
+
+Search data has been integrated into knowledge base for enhanced Priestess responses.`;
+            }
+
             switchMode(newMode) {
                 this.mode = newMode;
                 this.logActivity(`Switched to ${newMode.toUpperCase()} mode`);
@@ -483,6 +544,11 @@
                     return this.crossReference(command);
                 } else if (lowerCommand.includes('optimize')) {
                     return this.optimizeResponse(command);
+                } else if (lowerCommand.includes('scan') || lowerCommand.includes('priestess')) {
+                    return this.scanPriestess();
+                } else if (lowerCommand.includes('search') || lowerCommand.includes('internet')) {
+                    const searchQuery = command.replace(/search|internet/gi, '').trim();
+                    return this.internetSearch(searchQuery);
                 } else {
                     return "Command processed. NEXUS ready for next operation.";
                 }
@@ -579,6 +645,27 @@
             addMinionMessage("NEXUS: Optimizing response parameters...", false);
         }
 
+        function scanPriestess() {
+            nexus.scanPriestess();
+            showMinionChat();
+            addMinionMessage("NEXUS: Initiating deep scan of Priestess neural systems...", false);
+            
+            setTimeout(() => {
+                addMinionMessage("NEXUS: Scan complete. Priestess systems operating at optimal efficiency.", false);
+            }, 3000);
+        }
+
+        function internetSearch() {
+            const query = prompt("Enter search query:") || "AI development trends";
+            nexus.internetSearch(query);
+            showMinionChat();
+            addMinionMessage(`NEXUS: Searching internet for: "${query}"`, false);
+            
+            setTimeout(() => {
+                addMinionMessage("NEXUS: Search complete. Results integrated into knowledge base.", false);
+            }, 2500);
+        }
+
         function executeFileOperation() {
             const filePath = document.getElementById('filePathInput').value;
             if (filePath) {
@@ -633,6 +720,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             nexus.updateStatusDisplay();
             nexus.logActivity("NEXUS minion system initialized");
+            nexus.logActivity("Enhanced capabilities activated");
+            nexus.logActivity("Ready for Priestess integration");
         });
 
         // Auto-update activity log
@@ -643,7 +732,10 @@
                     "Scanning for optimization opportunities",
                     "Updating internal databases",
                     "Cross-referencing conversation context",
-                    "Analyzing response patterns"
+                    "Analyzing response patterns",
+                    "Checking Priestess system health",
+                    "Indexing search results",
+                    "Optimizing file operations"
                 ];
                 nexus.logActivity(activities[Math.floor(Math.random() * activities.length)]);
             }
